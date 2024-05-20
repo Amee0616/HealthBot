@@ -3,10 +3,9 @@ Developing a RAG-powered chatbot to enhance patient education accessibility and 
 
 ## :ledger: Index
 
- [About](#beginner-about)
+- [About](#beginner-about)
 - [Usage](#zap-usage)
-  - [Installation](#electric_plug-installation)
-  - [Commands](#package-commands)
+  - [Installation](#electric_plug-installation) 
 - [Development](#wrench-development)
   - [Pre-Requisites](#notebook-pre-requisites)
   - [Developmen Environment](#nut_and_bolt-development-environment)
@@ -39,7 +38,11 @@ Using our HealthBot App is straightforward and user-friendly. Simply install it 
 ```
 Installation Steps!
 ```
-##  Tools
+## 🔧 Development
+
+
+### :notebook: Pre-Requisites
+List of the pre-requisites the system needs to develop this project. </br>
 ● AWS </br>
 ● GitHub </br>
 ● Docker </br>
@@ -51,39 +54,11 @@ Installation Steps!
 ● NLTK </br>
 ● All sorts of APIs! </br>
 
-### :notebook: Pre-Requisites
-List all the pre-requisites the system needs to develop this project.
-- A tool
-- B tool
-
-###  :nut_and_bolt: Development Environment
-Write about setting up the working environment for your project.
-- How to download the project...
-- How to install dependencies...
-
-
-###  :file_folder: File Structure
+###  Flow Chart
 Add a file structure here with the basic details about files, below is an example.
 
 ```
-.
-├── assets
-│   ├── css
-│   │   ├── index-ui.css
-│   │   └── rate-ui.css
-│   ├── images
-│   │   ├── icons
-│   │   │   ├── shrink-button.png
-│   │   │   └── umbrella.png
-│   │   ├── logo_144.png
-│   │   └── Untitled-1.psd
-│   └── javascript
-│       ├── index.js
-│       └── rate.js
-├── CNAME
-├── index.html
-├── rate.html
-└── README.md
+
 ```
 
 | No | File Name | Details 
