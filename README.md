@@ -54,16 +54,9 @@ List of the pre-requisites the system needs to develop this project. </br>
 ● NLTK </br>
 ● All sorts of APIs! </br>
 
-###  Flow Chart
-Add a file structure here with the basic details about files, below is an example.
+## Flow Chart
 
-```
-
-```
-
-| No | File Name | Details 
-|----|------------|-------|
-| 1  | index | Entry point
+<img src="./img/HealthBot.png" alt="aws"/>
 
 ###  :hammer: Build
 Write the build Instruction here.
