@@ -1,9 +1,9 @@
-# HealthBot
+# <img src="./img/healthybot.png" alt="aws" width="40" height="40"/> HealthBot
 Developing a RAG-powered chatbot to enhance patient education accessibility and improve outcomes for both patients and doctors
 
 ## :ledger: Index
 
-- [About](#beginner-about)
+ [About](#beginner-about)
 - [Usage](#zap-usage)
   - [Installation](#electric_plug-installation)
   - [Commands](#package-commands)
@@ -24,24 +24,32 @@ Developing a RAG-powered chatbot to enhance patient education accessibility and 
 - [License](#lock-license)
 
 ##  :beginner: About
-Add a detailed introduction about the project here, everything you want the reader to know.
+Welcome to our Patient Education Chatbot, a cutting-edge tool designed to make high-quality patient education more accessible and improve health outcomes for both patients and healthcare providers.
+
+In the ever-evolving healthcare industry, patient-centric care is paramount. Effective patient engagement is essential, and central to this is patient education. According to the American Academy of Family Physicians (AAFP), patient education involves "influencing patient behavior and producing the changes in knowledge, attitudes, and skills necessary to maintain or improve health."
+
+Our chatbot is dedicated to empowering patients with the knowledge they need to manage their health effectively. 
+Our goal is to transform patient education, making it more interactive, accessible, and effective. By using our Patient Education Chatbot, healthcare providers can foster better patient engagement, empower patients to take control of their health, and ultimately achieve better clinical outcomes. 
 
 ## :zap: Usage
-Write about how to use this project.
-
-###  :electric_plug: Installation
+Using our HealthBot App is straightforward and user-friendly. Simply install it from the App Store or Android Store or download on your device and begin addressing your questions and concerns immediately.
+###  :electric_plug: Installation - TBD!
 - Steps on how to install this project, to use it.
 - Be very detailed here, For example, if you have tools which run on different operating systems, write installation steps for all of them.
-
 ```
-$ add installations steps if you have to.
+Installation Steps!
 ```
-
-###  :package: Commands
-- Commands to start the project.
-
-##  :wrench: Development
-If you want other people to contribute to this project, this is the section, make sure you always add this.
+##  Tools
+● AWS </br>
+● GitHub </br>
+● Docker </br>
+● Lucidchart </br>
+● LLM Toolkit (ChatGPT API, LangChain) </br>
+● Groq (API) - free beta! </br>
+● Voyage AI - embedding </br>
+● Pinecone </br>
+● NLTK </br>
+● All sorts of APIs! </br>
 
 ### :notebook: Pre-Requisites
 List all the pre-requisites the system needs to develop this project.
