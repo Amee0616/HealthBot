@@ -1,26 +1,19 @@
-# <img src="./img/healthybot.png" alt="aws" width="40" height="40"/> HealthBot
+# <img src="./img/healthybot.png" alt="aws" width="40" height="40"/> HealthBot - Patient Education ChatBot
 Developing a RAG-powered chatbot to enhance patient education accessibility and improve outcomes for both patients and doctors
 
 ## :ledger: Index
 
 - [About](#beginner-about)
+- [Goals And Non-Goals](#scope_goals-and-non-goals)
 - [Usage](#zap-usage)
-  - [Installation](#electric_plug-installation) 
 - [Development](#wrench-development)
   - [Pre-Requisites](#notebook-pre-requisites)
-  - [Developmen Environment](#nut_and_bolt-development-environment)
-  - [File Structure](#file_folder-file-structure)
-  - [Build](#hammer-build)  
-  - [Deployment](#rocket-deployment)  
-- [Community](#cherry_blossom-community)
-  - [Contribution](#fire-contribution)
-  - [Branches](#cactus-branches)
-  - [Guideline](#exclamation-guideline)  
-- [FAQ](#question-faq)
+  - [Data-Flow](#file_Data-Flow)
+  - [Cost Analysis](#costing_cost-analysis) 
+- [Impact and Risks](#question_impact-and-risks)
 - [Resources](#page_facing_up-resources)
 - [Gallery](#camera-gallery)
-- [Credit/Acknowledgment](#star2-creditacknowledgment)
-- [License](#lock-license)
+
 
 ##  :beginner: About
 Welcome to our Patient Education Chatbot, a cutting-edge tool designed to make high-quality patient education more accessible and improve health outcomes for both patients and healthcare providers.
@@ -29,17 +22,27 @@ In the ever-evolving healthcare industry, patient-centric care is paramount. Eff
 
 Our chatbot is dedicated to empowering patients with the knowledge they need to manage their health effectively. 
 Our goal is to transform patient education, making it more interactive, accessible, and effective. By using our Patient Education Chatbot, healthcare providers can foster better patient engagement, empower patients to take control of their health, and ultimately achieve better clinical outcomes. 
-
+## 🔭 Goals And Non-Goals
+✅ Goals </br>
+● Help you feel comfortable with using AWS
+services </br>
+● Build an actual project using ChatGPT with
+real-world datasets </br>
+● Gain more experience as an E2E “Data &
+LLM Solution Developer” </br>
+● Share my view about the healthcare
+industry & fostering discussion </br>
+❌ Not in scope </br>
+● Fine-tune a LLM </br>
+● Use open-source LLMs and host them on
+AWS </br>
+● Become THE expert on AWS </br>
+● Become THE expert in the healthcare 
+industry </br>
 ## :zap: Usage
 Using our HealthBot App is straightforward and user-friendly. Simply install it from the App Store or Android Store or download on your device and begin addressing your questions and concerns immediately.
-###  :electric_plug: Installation - TBD!
-- Steps on how to install this project, to use it.
-- Be very detailed here, For example, if you have tools which run on different operating systems, write installation steps for all of them.
-```
-Installation Steps!
-```
-## 🔧 Development
 
+## 🔧 Development
 
 ### :notebook: Pre-Requisites
 List of the pre-requisites the system needs to develop this project. </br>
@@ -54,75 +57,41 @@ List of the pre-requisites the system needs to develop this project. </br>
 ● NLTK </br>
 ● All sorts of APIs! </br>
 
-## Flow Chart
+### <img src="./img/flowchart.png" alt="aws" width="20" height="20"/> Data Flow
 
 <img src="./img/HealthBot.png" alt="aws"/>
 
-###  :hammer: Build
-Write the build Instruction here.
+### 💵: Cost Analysis TBD:
 
-### :rocket: Deployment
-Write the deployment instruction here.
+## Impact and Risks
+Impact: </br>
+● Improved Patient Engagement</br>
+● Enhanced Health Literacy</br>
+● Better Health Outcomes</br>
+● Increased Efficiency for Healthcare Providers</br>
+● Scalability</br>
+● Personalized Education</br>
+● Continuous Support</br>
 
-## :cherry_blossom: Community
-
-If it's open-source, talk about the community here, ask social media links and other links.
-
- ###  :fire: Contribution
-
- Your contributions are always welcome and appreciated. Following are the things you can do to contribute to this project.
-
- 1. **Report a bug** <br>
- If you think you have encountered a bug, and I should know about it, feel free to report it [here]() and I will take care of it.
-
- 2. **Request a feature** <br>
- You can also request for a feature [here](), and if it will viable, it will be picked for development.  
-
- 3. **Create a pull request** <br>
- It can't get better then this, your pull request will be appreciated by the community. You can get started by picking up any open issues from [here]() and make a pull request.
-
- > If you are new to open-source, make sure to check read more about it [here](https://www.digitalocean.com/community/tutorial_series/an-introduction-to-open-source) and learn more about creating a pull request [here](https://www.digitalocean.com/community/tutorials/how-to-create-a-pull-request-on-github).
-
-
- ### :cactus: Branches
-
- I use an agile continuous integration methodology, so the version is frequently updated and development is really fast.
-
-1. **`stage`** is the development branch.
-
-2. **`master`** is the production branch.
-
-3. No other permanent branches should be created in the main repository, you can create feature branches but they should get merged with the master.
-
-**Steps to work with feature branch**
-
-1. To start working on a new feature, create a new branch prefixed with `feat` and followed by feature name. (ie. `feat-FEATURE-NAME`)
-2. Once you are done with your changes, you can raise PR.
-
-**Steps to create a pull request**
-
-1. Make a PR to `stage` branch.
-2. Comply with the best practices and guidelines e.g. where the PR concerns visual elements it should have an image showing the effect.
-3. It must pass all continuous integration checks and get positive reviews.
-
-After this, changes will be merged.
-
-
-### :exclamation: Guideline
-coding guidelines or other things you want people to follow should follow.
-
-
-## :question: FAQ
-You can optionally add a FAQ section about the project.
+Risks:</br>
+● Data Privacy and Security</br>
+● Accuracy of Information</br>
+● Over-reliance on Technology</br>
+● Technical Issues</br>
+● Bias and Inequality</br>
+● Limited Scope</br>
+● Misinterpretation of Advice</br>
 
 ##  :page_facing_up: Resources
-Add important resources here
+PE for better outcome : https://www.techtarget.com/patientengagement/feature/Why-Patient-Education-Is-Vital-for-Engagement-Better-Outcomes </br>
+PE in Nursing : https://nursingcecentral.com/the-importance-of-patient-education-in-nursing/ </br>
+AWS Lambda AWS S3 : https://docs.aws.amazon.com/lambda/latest/operatorguide/intro.html </br>
+AWS CLI Installation : https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html </br>
+CCPA vs GDPR: An In-dept Comparison- Sprinto : https://sprinto.com/blog/ccpa-vs-gdpr/ </br>
+NLTK x NER (Named Entity Recognition) Introduction : https://fouadroumieh.medium.com/nlp-entity-extraction-ner-using-python-nltk-68649e65e54b </br>
+How to create a lambda layer: https://jasondezhulo.notion.site/Create-Custom-Lambda-Layers-4883fd1da6104007852ea510518a216d </br>
 
-##  :camera: Gallery
-Pictures of your project.
+##  :camera: Gallery TBD!
+Pictures of the project.
 
-## :star2: Credit/Acknowledgment
-Credit the authors here.
 
-##  :lock: License
-Add a license here, or a link to it.
