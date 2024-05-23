@@ -8,7 +8,7 @@ Developing a RAG-powered chatbot to enhance patient education accessibility and 
 - [Usage](#zap-usage)
 - [Development](#wrench-development)
   - [Pre-Requisites](#notebook-pre-requisites)
-  - [Data-Flow](#file_Data-Flow)
+  - [Data-Flow](#file-Data-Flow)
   - [Cost Analysis](#costing_cost-analysis) 
 - [Impact and Risks](#question_impact-and-risks)
 - [Resources](#page_facing_up-resources)
