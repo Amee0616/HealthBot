@@ -92,6 +92,8 @@ AWS CLI Installation : https://docs.aws.amazon.com/cli/latest/userguide/getting-
 CCPA vs GDPR: An In-dept Comparison- Sprinto : https://sprinto.com/blog/ccpa-vs-gdpr/ </br>
 NLTK x NER (Named Entity Recognition) Introduction : https://fouadroumieh.medium.com/nlp-entity-extraction-ner-using-python-nltk-68649e65e54b </br>
 How to create a lambda layer: https://jasondezhulo.notion.site/Create-Custom-Lambda-Layers-4883fd1da6104007852ea510518a216d </br>
+Pinecone : https://docs.pinecone.io/guides/get-started/quickstart
+VoyageAI : https://docs.voyageai.com/docs/api-key-and-installation
 
 ##  :camera: Gallery TBD!
 Pictures of the project.
