@@ -61,7 +61,9 @@ List of the pre-requisites the system needs to develop this project. </br>
 
 <img src="./img/HealthBot.png" alt="aws"/>
 
-### 💵: Cost Analysis TBD:
+### 💵: Cost Analysis:
+-> AWS (Amazon Web Services) : Upto $20 </br>
+-> OpenAI : Upto $20
 
 ## Impact and Risks
 Impact: </br>
