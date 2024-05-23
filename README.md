@@ -57,7 +57,7 @@ List of the pre-requisites the system needs to develop this project. </br>
 ● NLTK </br>
 ● All sorts of APIs! </br>
 
-### <img src="./img/flowchart.png" alt="aws" width="20" height="20"/> Data Flow
+### <img src="./img/flowchart.png" alt="aws" width="20" height="20"/> :file: Data Flow
 
 <img src="./img/HealthBot.png" alt="aws"/>
 
