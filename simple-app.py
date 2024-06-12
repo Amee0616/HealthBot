@@ -140,6 +140,12 @@ rag_chain = (
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
+# Sidebar for chat history
+st.sidebar.title("Chat History")
+for i, message in enumerate(st.session_state["messages"]):
+    with st.sidebar.expander(f"Message {i+1} - {message['role']}"):
+        st.write(message["content"])
+
 # Display chat messages from history
 for message in st.session_state["messages"]:
     with st.chat_message(message["role"]):
