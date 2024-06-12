@@ -56,7 +56,7 @@ def retrieve_and_format_response(query, retriever, llm, chat_history):
     message = HumanMessage(content=prompt)
 
     response = llm([message])
-    return response
+    return response.content  # Ensure returning the response content as string
 
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
@@ -70,14 +70,14 @@ aws_region = st.secrets["aws"]["aws_region"]
 llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=OPENAI_API_KEY)
 
 prompt_template = ChatPromptTemplate.from_template(
-        "Instruction: You are a helpful assistant to help users with their patient education queries. \
-        Based on the following information, provide a summarized & concise explanation using a couple of sentences. \
-        Only respond with the information relevant to the user query {query}, \
-        if there are none, make sure you say the `magic words`: 'I don't know, I did not find the relevant data in the knowledge base.' \
-        But you could carry out some conversations with the user to make them feel welcomed and comfortable, in that case you don't have to say the `magic words`. \
-        In the event that there's relevant info, make sure to attach the download button at the very end: \n\n[More Info]({s3_gen_url}) \
-        Context: {combined_content}"
-    )
+    "Instruction: You are a helpful assistant to help users with their patient education queries. \
+    Based on the following information, provide a summarized & concise explanation using a couple of sentences. \
+    Only respond with the information relevant to the user query {query}, \
+    if there are none, make sure you say the `magic words`: 'I don't know, I did not find the relevant data in the knowledge base.' \
+    But you could carry out some conversations with the user to make them feel welcomed and comfortable, in that case you don't have to say the `magic words`. \
+    In the event that there's relevant info, make sure to attach the download button at the very end: \n\n[More Info]({s3_gen_url}) \
+    Context: {combined_content}"
+)
 
 # Initialize necessary objects (s3 client, Pinecone, OpenAI, etc.)
 s3_client = boto3.client(
@@ -86,6 +86,7 @@ s3_client = boto3.client(
     aws_secret_access_key=aws_secret_access_key,
     region_name=aws_region
 )
+
 # PINECONE
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 pinecone.init(api_key=PINECONE_API_KEY)
@@ -94,9 +95,9 @@ openai.api_key = OPENAI_API_KEY
 
 # Set up LangChain objects
 # VOYAGE AI
-model_name = "voyage-large-2"  
+model_name = "voyage-large-2"
 embedding_function = VoyageAIEmbeddings(
-    model=model_name,  
+    model=model_name,
     voyage_api_key=VOYAGE_AI_API_KEY
 )
 # Initialize the Pinecone client
@@ -137,7 +138,7 @@ if user_input:
         # Compile the chat history
         chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state["messages"]])
         
-        bot_response = retrieve_and_format_response(user_input, retriever, llm, chat_history).content
+        bot_response = retrieve_and_format_response(user_input, retriever, llm, chat_history)
     
     st.session_state["messages"].append({"role": "assistant", "content": bot_response})
     
