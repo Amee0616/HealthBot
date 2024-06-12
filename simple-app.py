@@ -78,22 +78,6 @@ def save_chat_history_to_file(filename, history):
 def upload_file_to_s3(bucket, key, filename):
     s3_client.upload_file(filename, bucket, key)
 
-# Example usage with memory
-def ask_question(query, chain, llm, retriever, chat_history):
-    # Retrieve and format the response with pre-signed URLs
-    response_with_docs = retrieve_and_format_response(query, retriever, llm, chat_history)
-    
-    # Add the retrieved response to the memory
-    memory.save_context({"input": query}, {"output": response_with_docs['answer']})
-    
-    # Use the conversation chain to get the final response
-    response = chain.invoke(query)
-    pattern = r"s3(.*?)(?=json)"
-    s3_uris = ["s3" + x + "json" for x in re.findall(pattern, response)]
-    for s3_uri in s3_uris:
-        final_response = response.replace(s3_uri, generate_presigned_url(s3_uri))
-    return final_response
-
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
 VOYAGE_AI_API_KEY = st.secrets["api_keys"]["VOYAGE_AI_API_KEY"]
