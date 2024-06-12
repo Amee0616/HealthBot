@@ -3,21 +3,10 @@ from langchain_voyageai import VoyageAIEmbeddings
 import os
 import boto3
 from urllib.parse import urlparse
-from pinecone import Pinecone
 import pinecone
 from langchain_openai import ChatOpenAI
-import openai
-from langchain.chains import LLMChain, RetrievalQA
-import time
-import re
-from langchain_pinecone import PineconeVectorStore
-from langchain.memory import ConversationBufferMemory
 from langchain.schema import HumanMessage
 from langchain.prompts import ChatPromptTemplate
-from langchain.chains import ConversationChain
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-import uuid
 import warnings
 
 # Ignore all warnings
@@ -25,7 +14,7 @@ warnings.filterwarnings("ignore")
 
 # Set up Streamlit app
 st.set_page_config(page_title="Custom Chatbot", layout="wide")
-st.title("HealthBot The Insightful Retrieval Companion")
+st.title("Custom Chatbot with Retrieval Abilities")
 
 # Function to generate pre-signed URL
 def generate_presigned_url(s3_uri):
@@ -69,15 +58,6 @@ def retrieve_and_format_response(query, retriever, llm, chat_history):
     response = llm([message])
     return response
 
-# Function to save chat history to a file
-def save_chat_history_to_file(filename, history):
-    with open(filename, 'w') as file:
-        file.write(history)
-
-# Function to upload the file to S3
-def upload_file_to_s3(bucket, key, filename):
-    s3_client.upload_file(filename, bucket, key)
-
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
 VOYAGE_AI_API_KEY = st.secrets["api_keys"]["VOYAGE_AI_API_KEY"]
@@ -88,9 +68,6 @@ aws_region = st.secrets["aws"]["aws_region"]
 
 # Langchain stuff
 llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=OPENAI_API_KEY)
-
-# Initialize the conversation memory
-memory = ConversationBufferMemory()
 
 prompt_template = ChatPromptTemplate.from_template(
         "Instruction: You are a helpful assistant to help users with their patient education queries. \
@@ -111,7 +88,7 @@ s3_client = boto3.client(
 )
 # PINECONE
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-pc = Pinecone(api_key=PINECONE_API_KEY)
+pinecone.init(api_key=PINECONE_API_KEY)
 index_name = "test"
 openai.api_key = OPENAI_API_KEY
 
@@ -129,13 +106,6 @@ vector_store = PineconeVectorStore.from_existing_index(
 )
 retriever = vector_store.as_retriever()
 
-# Initialize rag_chain
-rag_chain = (
-    {"retrieved_context": retriever, "question": RunnablePassthrough()}
-    | prompt_template
-    | llm
-)
-
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
@@ -143,8 +113,8 @@ if "messages" not in st.session_state:
 # Sidebar for chat history
 st.sidebar.title("Chat History")
 for i, message in enumerate(st.session_state["messages"]):
-    with st.sidebar.expander(f"Message {i+1} - {message['role']}"):
-        st.write(message["content"])
+    role = "User" if message["role"] == "user" else "Assistant"
+    st.sidebar.write(f"{role} {i+1}: {message['content']}")
 
 # Display chat messages from history
 for message in st.session_state["messages"]:
