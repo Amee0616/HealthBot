@@ -17,6 +17,14 @@ warnings.filterwarnings("ignore")
 st.set_page_config(page_title="Custom Chatbot with Retrieval Abilities", layout="wide")
 st.title("Custom Chatbot with Retrieval Abilities")
 
+# Setup - Streamlit secrets
+OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
+VOYAGE_AI_API_KEY = st.secrets["api_keys"]["VOYAGE_AI_API_KEY"]
+PINECONE_API_KEY = st.secrets["api_keys"]["PINECONE_API_KEY"]
+aws_access_key_id = st.secrets["aws"]["aws_access_key_id"]
+aws_secret_access_key = st.secrets["aws"]["aws_secret_access_key"]
+aws_region = st.secrets["aws"]["aws_region"]
+
 # Function to generate pre-signed URL
 def generate_presigned_url(s3_uri):
     parsed_url = urlparse(s3_uri)
