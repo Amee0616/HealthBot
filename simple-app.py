@@ -4,7 +4,7 @@ import os
 import boto3
 from urllib.parse import urlparse
 from voyageai import Client as VoyageAIClient
-from pinecone import Pinecone
+from pinecone import Pinecone, Index
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import HumanMessage
@@ -14,7 +14,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set up Streamlit app
-st.set_page_config(page_title="Custom Chatbot", layout="wide")
+st.set_page_config(page_title="Custom Chatbot with Retrieval Abilities", layout="wide")
 st.title("Custom Chatbot with Retrieval Abilities")
 
 # Function to generate pre-signed URL
@@ -93,20 +93,22 @@ s3_client = boto3.client(
     region_name=aws_region
 )
 
-# PINECONE
-os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
+# Initialize Pinecone
 pinecone.init(api_key=PINECONE_API_KEY)
 index_name = "test"
-openai.api_key = OPENAI_API_KEY
+index = Index(index_name)
+
+# Initialize Voyage AI
+voyageai.api_key = VOYAGE_AI_API_KEY
+vo = VoyageAIClient()
 
 # Set up LangChain objects
-# VOYAGE AI
 model_name = "voyage-large-2"
 embedding_function = VoyageAIEmbeddings(
     model=model_name,
     voyage_api_key=VOYAGE_AI_API_KEY
 )
-# Initialize the Pinecone client
+
 vector_store = PineconeVectorStore.from_existing_index(
     embedding=embedding_function,
     index_name=index_name
@@ -144,12 +146,3 @@ if user_input:
         # Compile the chat history
         chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state["messages"]])
         
-        bot_response = retrieve_and_format_response(user_input, retriever, llm, chat_history)
-    
-    st.session_state["messages"].append({"role": "assistant", "content": bot_response})
-    
-    with st.chat_message("assistant"):
-        st.markdown(bot_response)
-
-    # Save chat history to S3
-    save_chat_history_to_s3(st.session_state["messages"], "your-s3-bucket-name", "chat_history.json")
