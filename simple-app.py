@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore")
 
 # Set up Streamlit app
 st.set_page_config(page_title="Custom Chatbot", layout="wide")
-st.title("Custom Chatbot with Retrieval Abilities")
+st.title(" HealthBot The Insightful Retrieval Companion")
 
 # Function to generate pre-signed URL
 def generate_presigned_url(s3_uri):
