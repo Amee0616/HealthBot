@@ -3,16 +3,15 @@ from langchain_voyageai import VoyageAIEmbeddings
 import os
 import boto3
 from urllib.parse import urlparse
-import pinecone
-from langchain_openai import ChatOpenAI
+from pinecone import Pinecone, ServerlessSpec
 import openai
 from langchain.memory import ConversationBufferMemory
 from langchain.schema import HumanMessage
 from langchain.prompts import ChatPromptTemplate
-import warnings
 from gtts import gTTS
 import base64
 import io
+import warnings
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
@@ -122,19 +121,38 @@ s3_client = boto3.client(
     aws_secret_access_key=aws_secret_access_key,
     region_name=aws_region
 )
-# PINECONE
-os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-pinecone.init(api_key=PINECONE_API_KEY)
-index_name = "test"
-openai.api_key = OPENAI_API_KEY
 
-# Set up LangChain objects
+# Initialize Pinecone
+pinecone_api_key = PINECONE_API_KEY
+pinecone_env = 'us-west1-gcp'
+
+pinecone_client = Pinecone(
+    api_key=pinecone_api_key,
+    environment=pinecone_env
+)
+
+index_name = "test"
+
+# Check if index exists, otherwise create one
+if index_name not in pinecone_client.list_indexes().names:
+    pinecone_client.create_index(
+        name=index_name,
+        dimension=1536,
+        metric='euclidean',
+        spec=ServerlessSpec(
+            cloud='aws',
+            region='us-west-2'
+        )
+    )
+
+# Initialize LangChain objects
 # VOYAGE AI
 model_name = "voyage-large-2"  
 embedding_function = VoyageAIEmbeddings(
     model=model_name,  
     voyage_api_key=VOYAGE_AI_API_KEY
 )
+
 # Initialize the Pinecone client
 vector_store = PineconeVectorStore.from_existing_index(
     embedding=embedding_function,
