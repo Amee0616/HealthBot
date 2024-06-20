@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore")
 
 # Set up Streamlit app
 st.set_page_config(page_title="Custom Chatbot", layout="wide")
-st.title(" HealthBot The Insightful Retrieval Companion")
+st.title("Custom Chatbot with Retrieval Abilities")
 
 # Function to generate pre-signed URL
 def generate_presigned_url(s3_uri):
@@ -40,7 +40,7 @@ def generate_presigned_url(s3_uri):
     return presigned_url
 
 # Function to retrieve documents, generate URLs, and format the response
-def retrieve_and_format_response(query, retriever, llm, chat_history):
+def retrieve_and_format_response(query, retriever, llm):
     docs = retriever.get_relevant_documents(query)
     
     formatted_docs = []
@@ -59,9 +59,8 @@ def retrieve_and_format_response(query, retriever, llm, chat_history):
                Only respond with the information relevant to the user query {query}, \
                if there are none, make sure you say the `magic words`: 'I don't know, I did not find the relevant data in the knowledge base.' \
                But you could carry out some conversations with the user to make them feel welcomed and comfortable, in that case you don't have to say the `magic words`. \
-               In the event that there's relevant info, make sure to attach the download button at the very end: \n\n[More Info Download]({s3_gen_url}) \
-               Context: {combined_content} \
-               Chat History: {chat_history}"
+               In the event that there's relevant info, make sure to attach the download button at the very end: \n\n[More Info]({s3_gen_url}) \
+               Context: {combined_content}"
     
     # Originally there were no message
     message = HumanMessage(content=prompt)
@@ -78,10 +77,21 @@ def save_chat_history_to_file(filename, history):
 def upload_file_to_s3(bucket, key, filename):
     s3_client.upload_file(filename, bucket, key)
 
-# Function to get chat history as text
-def get_chat_history_text(messages):
-    chat_history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
-    return chat_history_text
+# Example usage with memory
+def ask_question(query, chain, llm):
+    # Retrieve and format the response with pre-signed URLs
+    response_with_docs = retrieve_and_format_response(query, retriever, llm)
+    
+    # Add the retrieved response to the memory
+    memory.save_context({"input": query}, {"output": response_with_docs['answer']})
+    
+    # Use the conversation chain to get the final response
+    response = chain.invoke(query)
+    pattern = r"s3(.*?)(?=json)"
+    s3_uris = ["s3" + x + "json" for x in re.findall(pattern, response)]
+    for s3_uri in s3_uris:
+        final_response = response.replace(s3_uri, generate_presigned_url(s3_uri))
+    return final_response
 
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
@@ -145,22 +155,6 @@ rag_chain = (
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-# Sidebar for chat history and download button
-st.sidebar.title("Chat History")
-for i, message in enumerate(st.session_state["messages"]):
-    with st.sidebar.expander(f"Message {i+1} - {message['role']}"):
-        st.write(message["content"])
-
-# Download chat history as text file
-if st.sidebar.button("Download Chat History"):
-    chat_history_text = get_chat_history_text(st.session_state["messages"])
-    st.sidebar.download_button(
-        label="Download",
-        data=chat_history_text,
-        file_name="chat_history.txt",
-        mime="text/plain"
-    )
-
 # Display chat messages from history
 for message in st.session_state["messages"]:
     with st.chat_message(message["role"]):
@@ -179,10 +173,7 @@ if user_input:
     
     # Generate and display bot response
     with st.spinner("Thinking..."):
-        # Compile the chat history
-        chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state["messages"]])
-        
-        bot_response = retrieve_and_format_response(user_input, retriever, llm, chat_history).content
+        bot_response = retrieve_and_format_response(user_input, retriever, llm).content
     
     st.session_state["messages"].append({"role": "assistant", "content": bot_response})
     
