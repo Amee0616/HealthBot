@@ -19,13 +19,17 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 import uuid
 import warnings
+import speech_recognition as sr
+from gtts import gTTS
+from pydub import AudioSegment
+from pydub.playback import play
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
 
 # Set up Streamlit app
 st.set_page_config(page_title="Custom Chatbot", layout="wide")
-st.title(" HealthBot The Insightful Retrieval Companion")
+st.title("HealthBot The Insightful Retrieval Companion")
 
 # Function to generate pre-signed URL
 def generate_presigned_url(s3_uri):
@@ -82,6 +86,29 @@ def upload_file_to_s3(bucket, key, filename):
 def get_chat_history_text(messages):
     chat_history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
     return chat_history_text
+
+# Function to convert text to speech and play it
+def text_to_speech(text):
+    tts = gTTS(text=text, lang='en')
+    tts.save("response.mp3")
+    audio = AudioSegment.from_mp3("response.mp3")
+    play(audio)
+
+# Function to convert speech to text
+def speech_to_text():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        st.info("Listening...")
+        audio_data = recognizer.listen(source)
+        try:
+            text = recognizer.recognize_google(audio_data)
+            st.success(f"You said: {text}")
+            return text
+        except sr.UnknownValueError:
+            st.error("Sorry, I did not catch that.")
+        except sr.RequestError:
+            st.error("Could not request results; check your network connection.")
+    return None
 
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
@@ -166,8 +193,12 @@ for message in st.session_state["messages"]:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Get user input
-user_input = st.chat_input("You: ")
+# Audio input
+st.write("## Audio Input")
+if st.button("Record Audio"):
+    user_input = speech_to_text()
+else:
+    user_input = st.chat_input("You: ")
 
 if user_input:
     # Add user message to chat history
@@ -188,3 +219,6 @@ if user_input:
     
     with st.chat_message("assistant"):
         st.markdown(bot_response)
+
+    # Convert bot response to speech and play it
+    text_to_speech(bot_response)
