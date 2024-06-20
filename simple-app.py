@@ -3,24 +3,15 @@ from langchain_voyageai import VoyageAIEmbeddings
 import os
 import boto3
 from urllib.parse import urlparse
-from pinecone import Pinecone
 import pinecone
 from langchain_openai import ChatOpenAI
 import openai
-from langchain.chains import LLMChain, RetrievalQA
-import time
-import re
-from langchain_pinecone import PineconeVectorStore
 from langchain.memory import ConversationBufferMemory
 from langchain.schema import HumanMessage
 from langchain.prompts import ChatPromptTemplate
-from langchain.chains import ConversationChain
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-import uuid
 import warnings
 from gtts import gTTS
-from pydub import AudioSegment
+import base64
 import io
 
 # Ignore all warnings
@@ -28,7 +19,7 @@ warnings.filterwarnings("ignore")
 
 # Set up Streamlit app
 st.set_page_config(page_title="Custom Chatbot", layout="wide")
-st.title("HealthBot The Insightful Retrieval Companion")
+st.title("HealthBot: The Insightful Retrieval Companion")
 
 # Function to generate pre-signed URL
 def generate_presigned_url(s3_uri):
@@ -94,6 +85,12 @@ def text_to_speech(text):
     audio_fp.seek(0)
     return audio_fp
 
+# Function to generate download link for audio
+def generate_download_link(audio_fp, filename, filetype):
+    b64 = base64.b64encode(audio_fp.read()).decode()
+    href = f'<a href="data:audio/{filetype};base64,{b64}" download="{filename}">Download {filename}</a>'
+    return href
+
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
 VOYAGE_AI_API_KEY = st.secrets["api_keys"]["VOYAGE_AI_API_KEY"]
@@ -127,7 +124,7 @@ s3_client = boto3.client(
 )
 # PINECONE
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-pc = Pinecone(api_key=PINECONE_API_KEY)
+pinecone.init(api_key=PINECONE_API_KEY)
 index_name = "test"
 openai.api_key = OPENAI_API_KEY
 
@@ -200,13 +197,10 @@ if user_input:
     with st.chat_message("assistant"):
         st.markdown(bot_response)
 
-    # Convert bot response to audio and provide download option
+    # Convert bot response to audio and provide playback and download options
     audio_fp = text_to_speech(bot_response)
     st.audio(audio_fp, format="audio/mp3")
 
-    st.download_button(
-        label="Download Audio Response",
-        data=audio_fp,
-        file_name="response.mp3",
-        mime="audio/mp3"
-    )
+    audio_fp.seek(0)
+    download_link = generate_download_link(audio_fp, "response.mp3", "mp3")
+    st.markdown(download_link, unsafe_allow_html=True)
