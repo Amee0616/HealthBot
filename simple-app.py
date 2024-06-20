@@ -7,6 +7,7 @@ from pinecone import Pinecone, ServerlessSpec
 import openai
 from langchain.memory import ConversationBufferMemory
 from langchain.schema import HumanMessage
+from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from gtts import gTTS
 import base64
