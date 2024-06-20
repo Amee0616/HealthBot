@@ -3,22 +3,29 @@ from langchain_voyageai import VoyageAIEmbeddings
 import os
 import boto3
 from urllib.parse import urlparse
+from pinecone import Pinecone
 import pinecone
 from langchain_openai import ChatOpenAI
 import openai
-from langchain.chains import LLMChain
+from langchain.chains import LLMChain, RetrievalQA
+import time
+import re
+from langchain_pinecone import PineconeVectorStore
+from langchain.memory import ConversationBufferMemory
+from langchain.schema import HumanMessage
+from langchain.prompts import ChatPromptTemplate
+from langchain.chains import ConversationChain
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+import uuid
 import warnings
-import speech_recognition as sr
-from gtts import gTTS
-from pydub import AudioSegment
-from pydub.playback import play
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
 
 # Set up Streamlit app
 st.set_page_config(page_title="Custom Chatbot", layout="wide")
-st.title("HealthBot The Insightful Retrieval Companion")
+st.title(" HealthBot The Insightful Retrieval Companion")
 
 # Function to generate pre-signed URL
 def generate_presigned_url(s3_uri):
@@ -56,7 +63,9 @@ def retrieve_and_format_response(query, retriever, llm, chat_history):
                Context: {combined_content} \
                Chat History: {chat_history}"
     
+    # Originally there were no message
     message = HumanMessage(content=prompt)
+
     response = llm([message])
     return response
 
@@ -74,29 +83,6 @@ def get_chat_history_text(messages):
     chat_history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
     return chat_history_text
 
-# Function to convert text to speech and play it
-def text_to_speech(text):
-    tts = gTTS(text=text, lang='en')
-    tts.save("response.mp3")
-    audio = AudioSegment.from_mp3("response.mp3")
-    play(audio)
-
-# Function to convert speech to text
-def speech_to_text():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        st.info("Listening...")
-        audio_data = recognizer.listen(source)
-        try:
-            text = recognizer.recognize_google(audio_data)
-            st.success(f"You said: {text}")
-            return text
-        except sr.UnknownValueError:
-            st.error("Sorry, I did not catch that.")
-        except sr.RequestError:
-            st.error("Could not request results; check your network connection.")
-    return None
-
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
 VOYAGE_AI_API_KEY = st.secrets["api_keys"]["VOYAGE_AI_API_KEY"]
@@ -105,7 +91,7 @@ aws_access_key_id = st.secrets["aws"]["aws_access_key_id"]
 aws_secret_access_key = st.secrets["aws"]["aws_secret_access_key"]
 aws_region = st.secrets["aws"]["aws_region"]
 
-# Initialize LangChain components
+# Langchain stuff
 llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=OPENAI_API_KEY)
 
 # Initialize the conversation memory
@@ -128,20 +114,19 @@ s3_client = boto3.client(
     aws_secret_access_key=aws_secret_access_key,
     region_name=aws_region
 )
-
-# Initialize Pinecone
+# PINECONE
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-pinecone.init(api_key=PINECONE_API_KEY)
+pc = Pinecone(api_key=PINECONE_API_KEY)
 index_name = "test"
 openai.api_key = OPENAI_API_KEY
 
 # Set up LangChain objects
+# VOYAGE AI
 model_name = "voyage-large-2"  
 embedding_function = VoyageAIEmbeddings(
     model=model_name,  
     voyage_api_key=VOYAGE_AI_API_KEY
 )
-
 # Initialize the Pinecone client
 vector_store = PineconeVectorStore.from_existing_index(
     embedding=embedding_function,
@@ -149,7 +134,7 @@ vector_store = PineconeVectorStore.from_existing_index(
 )
 retriever = vector_store.as_retriever()
 
-# Initialize RAG chain
+# Initialize rag_chain
 rag_chain = (
     {"retrieved_context": retriever, "question": RunnablePassthrough()}
     | prompt_template
@@ -181,12 +166,8 @@ for message in st.session_state["messages"]:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Audio input
-st.write("## Audio Input")
-if st.button("Record Audio"):
-    user_input = speech_to_text()
-else:
-    user_input = st.chat_input("You: ")
+# Get user input
+user_input = st.chat_input("You: ")
 
 if user_input:
     # Add user message to chat history
@@ -207,6 +188,3 @@ if user_input:
     
     with st.chat_message("assistant"):
         st.markdown(bot_response)
-
-    # Convert bot response to speech and play it
-    text_to_speech(bot_response)
