@@ -3,15 +3,21 @@ from langchain_voyageai import VoyageAIEmbeddings
 import os
 import boto3
 from urllib.parse import urlparse
-from pinecone import Pinecone, ServerlessSpec
+from pinecone import Pinecone
+import pinecone
+from langchain_openai import ChatOpenAI
 import openai
+from langchain.chains import LLMChain, RetrievalQA
+import time
+import re
+from langchain_pinecone import PineconeVectorStore
 from langchain.memory import ConversationBufferMemory
 from langchain.schema import HumanMessage
-from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-from gtts import gTTS
-import base64
-import io
+from langchain.chains import ConversationChain
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+import uuid
 import warnings
 
 # Ignore all warnings
@@ -19,7 +25,7 @@ warnings.filterwarnings("ignore")
 
 # Set up Streamlit app
 st.set_page_config(page_title="Custom Chatbot", layout="wide")
-st.title("HealthBot: The Insightful Retrieval Companion")
+st.title(" HealthBot The Insightful Retrieval Companion")
 
 # Function to generate pre-signed URL
 def generate_presigned_url(s3_uri):
@@ -77,20 +83,6 @@ def get_chat_history_text(messages):
     chat_history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
     return chat_history_text
 
-# Function to convert text to speech
-def text_to_speech(text):
-    tts = gTTS(text)
-    audio_fp = io.BytesIO()
-    tts.write_to_fp(audio_fp)
-    audio_fp.seek(0)
-    return audio_fp
-
-# Function to generate download link for audio
-def generate_download_link(audio_fp, filename, filetype):
-    b64 = base64.b64encode(audio_fp.read()).decode()
-    href = f'<a href="data:audio/{filetype};base64,{b64}" download="{filename}">Download {filename}</a>'
-    return href
-
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
 VOYAGE_AI_API_KEY = st.secrets["api_keys"]["VOYAGE_AI_API_KEY"]
@@ -122,32 +114,19 @@ s3_client = boto3.client(
     aws_secret_access_key=aws_secret_access_key,
     region_name=aws_region
 )
-
-# Initialize Pinecone
-pinecone_client = Pinecone(api_key=PINECONE_API_KEY)
+# PINECONE
+os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
+pc = Pinecone(api_key=PINECONE_API_KEY)
 index_name = "test"
+openai.api_key = OPENAI_API_KEY
 
-# Check if index exists, otherwise create one
-indexes = pinecone_client.list_indexes()
-if index_name not in indexes:
-    pinecone_client.create_index(
-        name=index_name,
-        dimension=1536,
-        metric='euclidean',
-        spec=ServerlessSpec(
-            cloud='aws',
-            region='us-west-2'
-        )
-    )
-
-# Initialize LangChain objects
+# Set up LangChain objects
 # VOYAGE AI
 model_name = "voyage-large-2"  
 embedding_function = VoyageAIEmbeddings(
     model=model_name,  
     voyage_api_key=VOYAGE_AI_API_KEY
 )
-
 # Initialize the Pinecone client
 vector_store = PineconeVectorStore.from_existing_index(
     embedding=embedding_function,
@@ -209,11 +188,3 @@ if user_input:
     
     with st.chat_message("assistant"):
         st.markdown(bot_response)
-
-    # Convert bot response to audio and provide playback and download options
-    audio_fp = text_to_speech(bot_response)
-    st.audio(audio_fp, format="audio/mp3")
-
-    audio_fp.seek(0)
-    download_link = generate_download_link(audio_fp, "response.mp3", "mp3")
-    st.markdown(download_link, unsafe_allow_html=True)
