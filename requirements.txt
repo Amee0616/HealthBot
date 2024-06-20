@@ -6,3 +6,6 @@ langchain-openai
 openai
 langchain
 langchain_pinecone
+speechrecognition
+pydub 
+gtts 
