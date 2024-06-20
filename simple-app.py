@@ -128,7 +128,7 @@ pinecone_client = Pinecone(api_key=PINECONE_API_KEY)
 index_name = "test"
 
 # Check if index exists, otherwise create one
-indexes = pinecone_client.list_indexes().names
+indexes = pinecone_client.list_indexes()
 if index_name not in indexes:
     pinecone_client.create_index(
         name=index_name,
