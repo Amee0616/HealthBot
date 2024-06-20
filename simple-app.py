@@ -19,13 +19,16 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 import uuid
 import warnings
+from gtts import gTTS
+from pydub import AudioSegment
+import io
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
 
 # Set up Streamlit app
 st.set_page_config(page_title="Custom Chatbot", layout="wide")
-st.title(" HealthBot The Insightful Retrieval Companion")
+st.title("HealthBot The Insightful Retrieval Companion")
 
 # Function to generate pre-signed URL
 def generate_presigned_url(s3_uri):
@@ -82,6 +85,14 @@ def upload_file_to_s3(bucket, key, filename):
 def get_chat_history_text(messages):
     chat_history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
     return chat_history_text
+
+# Function to convert text to speech
+def text_to_speech(text):
+    tts = gTTS(text)
+    audio_fp = io.BytesIO()
+    tts.write_to_fp(audio_fp)
+    audio_fp.seek(0)
+    return audio_fp
 
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
@@ -188,3 +199,14 @@ if user_input:
     
     with st.chat_message("assistant"):
         st.markdown(bot_response)
+
+    # Convert bot response to audio and provide download option
+    audio_fp = text_to_speech(bot_response)
+    st.audio(audio_fp, format="audio/mp3")
+
+    st.download_button(
+        label="Download Audio Response",
+        data=audio_fp,
+        file_name="response.mp3",
+        mime="audio/mp3"
+    )
