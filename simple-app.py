@@ -3,21 +3,10 @@ from langchain_voyageai import VoyageAIEmbeddings
 import os
 import boto3
 from urllib.parse import urlparse
-from pinecone import Pinecone
 import pinecone
 from langchain_openai import ChatOpenAI
 import openai
-from langchain.chains import LLMChain, RetrievalQA
-import time
-import re
-from langchain_pinecone import PineconeVectorStore
-from langchain.memory import ConversationBufferMemory
-from langchain.schema import HumanMessage
-from langchain.prompts import ChatPromptTemplate
-from langchain.chains import ConversationChain
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-import uuid
+from langchain.chains import LLMChain
 import warnings
 import speech_recognition as sr
 from gtts import gTTS
@@ -67,9 +56,7 @@ def retrieve_and_format_response(query, retriever, llm, chat_history):
                Context: {combined_content} \
                Chat History: {chat_history}"
     
-    # Originally there were no message
     message = HumanMessage(content=prompt)
-
     response = llm([message])
     return response
 
@@ -118,7 +105,7 @@ aws_access_key_id = st.secrets["aws"]["aws_access_key_id"]
 aws_secret_access_key = st.secrets["aws"]["aws_secret_access_key"]
 aws_region = st.secrets["aws"]["aws_region"]
 
-# Langchain stuff
+# Initialize LangChain components
 llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=OPENAI_API_KEY)
 
 # Initialize the conversation memory
@@ -141,19 +128,20 @@ s3_client = boto3.client(
     aws_secret_access_key=aws_secret_access_key,
     region_name=aws_region
 )
-# PINECONE
+
+# Initialize Pinecone
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-pc = Pinecone(api_key=PINECONE_API_KEY)
+pinecone.init(api_key=PINECONE_API_KEY)
 index_name = "test"
 openai.api_key = OPENAI_API_KEY
 
 # Set up LangChain objects
-# VOYAGE AI
 model_name = "voyage-large-2"  
 embedding_function = VoyageAIEmbeddings(
     model=model_name,  
     voyage_api_key=VOYAGE_AI_API_KEY
 )
+
 # Initialize the Pinecone client
 vector_store = PineconeVectorStore.from_existing_index(
     embedding=embedding_function,
@@ -161,7 +149,7 @@ vector_store = PineconeVectorStore.from_existing_index(
 )
 retriever = vector_store.as_retriever()
 
-# Initialize rag_chain
+# Initialize RAG chain
 rag_chain = (
     {"retrieved_context": retriever, "question": RunnablePassthrough()}
     | prompt_template
