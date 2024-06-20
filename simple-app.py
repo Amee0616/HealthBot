@@ -78,6 +78,11 @@ def save_chat_history_to_file(filename, history):
 def upload_file_to_s3(bucket, key, filename):
     s3_client.upload_file(filename, bucket, key)
 
+# Function to get chat history as text
+def get_chat_history_text(messages):
+    chat_history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
+    return chat_history_text
+
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
 VOYAGE_AI_API_KEY = st.secrets["api_keys"]["VOYAGE_AI_API_KEY"]
@@ -140,11 +145,21 @@ rag_chain = (
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-# Sidebar for chat history
+# Sidebar for chat history and download button
 st.sidebar.title("Chat History")
 for i, message in enumerate(st.session_state["messages"]):
     with st.sidebar.expander(f"Message {i+1} - {message['role']}"):
         st.write(message["content"])
+
+# Download chat history as text file
+if st.sidebar.button("Download Chat History"):
+    chat_history_text = get_chat_history_text(st.session_state["messages"])
+    st.sidebar.download_button(
+        label="Download",
+        data=chat_history_text,
+        file_name="chat_history.txt",
+        mime="text/plain"
+    )
 
 # Display chat messages from history
 for message in st.session_state["messages"]:
