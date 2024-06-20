@@ -124,18 +124,12 @@ s3_client = boto3.client(
 )
 
 # Initialize Pinecone
-pinecone_api_key = PINECONE_API_KEY
-pinecone_env = 'us-west1-gcp'
-
-pinecone_client = Pinecone(
-    api_key=pinecone_api_key,
-    environment=pinecone_env
-)
-
+pinecone_client = Pinecone(api_key=PINECONE_API_KEY)
 index_name = "test"
 
 # Check if index exists, otherwise create one
-if index_name not in pinecone_client.list_indexes().names:
+indexes = pinecone_client.list_indexes().names
+if index_name not in indexes:
     pinecone_client.create_index(
         name=index_name,
         dimension=1536,
