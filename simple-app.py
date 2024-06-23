@@ -3,7 +3,6 @@ from langchain_voyageai import VoyageAIEmbeddings
 import os
 import boto3
 from urllib.parse import urlparse
-from pinecone import Pinecone
 import pinecone
 from langchain_openai import ChatOpenAI
 import openai
@@ -23,6 +22,7 @@ import numpy as np
 import queue
 import soundfile as sf
 import tempfile
+import uuid
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
@@ -67,9 +67,7 @@ def retrieve_and_format_response(query, retriever, llm, chat_history):
                Context: {combined_content} \
                Chat History: {chat_history}"
     
-    # Originally there were no message
     message = HumanMessage(content=prompt)
-
     response = llm([message])
     return response
 
@@ -140,7 +138,7 @@ s3_client = boto3.client(
 
 # PINECONE
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-pc = Pinecone(api_key=PINECONE_API_KEY)
+pinecone.init(api_key=PINECONE_API_KEY)
 index_name = "test"
 openai.api_key = OPENAI_API_KEY
 
@@ -151,6 +149,7 @@ embedding_function = VoyageAIEmbeddings(
     model=model_name,  
     voyage_api_key=VOYAGE_AI_API_KEY
 )
+
 # Initialize the Pinecone client
 vector_store = PineconeVectorStore.from_existing_index(
     embedding=embedding_function,
@@ -192,25 +191,21 @@ for message in st.session_state["messages"]:
 
 # Get user input from text or audio
 user_input_text = st.chat_input("You: ")
+user_input_audio = None
 
-# Audio input
 webrtc_ctx = webrtc_streamer(
-    key="audio",
+    key="example",
     mode=WebRtcMode.SENDRECV,
     audio_processor_factory=AudioProcessor,
     media_stream_constraints={"audio": True},
-    async_processing=True,
 )
 
-if user_input_text:
-    user_input = user_input_text
-elif webrtc_ctx and webrtc_ctx.state.playing:
-    audio_processor = webrtc_ctx.audio_processor
-    if audio_processor and not audio_processor.audio_queue.empty():
-        audio_frames = []
-        while not audio_processor.audio_queue.empty():
-            audio_frames.append(audio_processor.audio_queue.get())
-
+if webrtc_ctx.audio_receiver:
+    audio_frames = []
+    while not webrtc_ctx.audio_receiver.audio_queue.empty():
+        audio_frames.append(webrtc_ctx.audio_receiver.audio_queue.get())
+    
+    if audio_frames:
         audio_data = np.concatenate(audio_frames, axis=0)
         tmp_wav_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
         sf.write(tmp_wav_file.name, audio_data, 16000)
@@ -219,9 +214,11 @@ elif webrtc_ctx and webrtc_ctx.state.playing:
             audio_bytes = f.read()
         # Process audio input (transcribe if necessary)
         # Assuming a transcribe_audio function exists
-        user_input = transcribe_audio(tmp_wav_file.name)
+        user_input_audio = transcribe_audio(tmp_wav_file.name)
 
-# Add user message to chat history
+# Use audio input if available, otherwise use text input
+user_input = user_input_audio if user_input_audio else user_input_text
+
 if user_input:
     st.session_state["messages"].append({"role": "user", "content": user_input})
     with st.chat_message("user"):
