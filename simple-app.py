@@ -8,16 +8,13 @@ import pinecone
 from langchain_openai import ChatOpenAI
 import openai
 from langchain.chains import LLMChain, RetrievalQA
-import time
 import re
 from langchain_pinecone import PineconeVectorStore
 from langchain.memory import ConversationBufferMemory
 from langchain.schema import HumanMessage
 from langchain.prompts import ChatPromptTemplate
-from langchain.chains import ConversationChain
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-import uuid
 import warnings
 from gtts import gTTS
 import base64
@@ -140,6 +137,7 @@ s3_client = boto3.client(
     aws_secret_access_key=aws_secret_access_key,
     region_name=aws_region
 )
+
 # PINECONE
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 pc = Pinecone(api_key=PINECONE_API_KEY)
@@ -213,11 +211,26 @@ elif webrtc_ctx and webrtc_ctx.state.playing:
         while not audio_processor.audio_queue.empty():
             audio_frames.append(audio_processor.audio_queue.get())
         audio_data = np.concatenate(audio_frames, axis=0)
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-            sf.write(f.name, audio_data, 44100)
-            user_input = audio_to_text(f.name)
-            st.audio(f.name, format="audio/wav")
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav_file:
+            sf.write(tmp_wav_file.name, audio_data, samplerate=16000)
+        with open(tmp_wav_file.name, "rb") as f:
+            audio_bytes = f.read()
+        # Process audio input (transcribe if necessary)
 
+# Add user message to chat history
 if user_input:
-    # Add user message to chat history
-    st.session
+    st.session_state["messages"].append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.markdown(user_input)
+    
+    chat_history = get_chat_history_text(st.session_state["messages"])
+    response = retrieve_and_format_response(user_input, retriever, llm, chat_history)
+    
+    st.session_state["messages"].append({"role": "assistant", "content": response})
+    with st.chat_message("assistant"):
+        st.markdown(response)
+
+    # Convert response to audio and provide download link
+    audio_filename = f"response_{uuid.uuid4()}.mp3"
+    audio_url = text_to_audio(response, audio_filename)
+    st.audio(audio_url, format="audio/mp3")
