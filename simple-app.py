@@ -21,6 +21,11 @@ import uuid
 import warnings
 from gtts import gTTS
 import base64
+from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, WebRtcMode
+import numpy as np
+import queue
+import soundfile as sf
+import tempfile
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
@@ -93,6 +98,16 @@ def text_to_audio(text, filename):
         audio_bytes = f.read()
     audio_base64 = base64.b64encode(audio_bytes).decode()
     return f"data:audio/mp3;base64,{audio_base64}"
+
+# AudioProcessor for handling audio streaming
+class AudioProcessor(AudioProcessorBase):
+    def __init__(self):
+        self.audio_queue = queue.Queue()
+
+    def recv(self, frame):
+        audio_data = frame.to_ndarray()
+        self.audio_queue.put(audio_data)
+        return frame
 
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
@@ -177,27 +192,32 @@ for message in st.session_state["messages"]:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Get user input
-user_input = st.chat_input("You: ")
+# Get user input from text or audio
+user_input_text = st.chat_input("You: ")
+
+# Audio input
+webrtc_ctx = webrtc_streamer(
+    key="audio",
+    mode=WebRtcMode.SENDRECV,
+    audio_processor_factory=AudioProcessor,
+    media_stream_constraints={"audio": True},
+    async_processing=True,
+)
+
+if user_input_text:
+    user_input = user_input_text
+elif webrtc_ctx and webrtc_ctx.state.playing:
+    audio_processor = webrtc_ctx.audio_processor
+    if audio_processor and not audio_processor.audio_queue.empty():
+        audio_frames = []
+        while not audio_processor.audio_queue.empty():
+            audio_frames.append(audio_processor.audio_queue.get())
+        audio_data = np.concatenate(audio_frames, axis=0)
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            sf.write(f.name, audio_data, 44100)
+            user_input = audio_to_text(f.name)
+            st.audio(f.name, format="audio/wav")
 
 if user_input:
     # Add user message to chat history
-    st.session_state["messages"].append({"role": "user", "content": user_input})
-    
-    # Display user message
-    with st.chat_message("user"):
-        st.markdown(user_input)
-    
-    # Generate and display bot response
-    with st.spinner("Thinking..."):
-        # Compile the chat history
-        chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state["messages"]])
-        
-        bot_response = retrieve_and_format_response(user_input, retriever, llm, chat_history).content
-        
-    st.session_state["messages"].append({"role": "assistant", "content": bot_response})
-    
-    with st.chat_message("assistant"):
-        st.markdown(bot_response)
-        audio_url = text_to_audio(bot_response, "response.mp3")
-        st.audio(audio_url, format="audio/mp3")
+    st.session
