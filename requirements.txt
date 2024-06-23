@@ -9,4 +9,4 @@ langchain_pinecone
 speechrecognition
 pydub 
 gtts 
-
+streamlit_webrtc
