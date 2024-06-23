@@ -210,12 +210,16 @@ elif webrtc_ctx and webrtc_ctx.state.playing:
         audio_frames = []
         while not audio_processor.audio_queue.empty():
             audio_frames.append(audio_processor.audio_queue.get())
+
         audio_data = np.concatenate(audio_frames, axis=0)
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav_file:
-            sf.write(tmp_wav_file.name, audio_data, samplerate=16000)
+        tmp_wav_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+        sf.write(tmp_wav_file.name, audio_data, 16000)
+
         with open(tmp_wav_file.name, "rb") as f:
             audio_bytes = f.read()
         # Process audio input (transcribe if necessary)
+        # Assuming a transcribe_audio function exists
+        user_input = transcribe_audio(tmp_wav_file.name)
 
 # Add user message to chat history
 if user_input:
