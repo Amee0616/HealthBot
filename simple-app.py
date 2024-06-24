@@ -21,6 +21,8 @@ import uuid
 import warnings
 from gtts import gTTS
 import base64
+import speech_recognition as sr
+import tempfile
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
@@ -86,13 +88,26 @@ def get_chat_history_text(messages):
     return chat_history_text
 
 # Function to convert text to speech and return the audio file URL
-def text_to_audio(text, filename):
+def text_to_audio(text):
     tts = gTTS(text)
-    tts.save(filename)
-    with open(filename, "rb") as f:
+    tts.save("response.mp3")
+    with open("response.mp3", "rb") as f:
         audio_bytes = f.read()
     audio_base64 = base64.b64encode(audio_bytes).decode()
     return f"data:audio/mp3;base64,{audio_base64}"
+
+# Function to convert audio to text
+def audio_to_text(audio_file):
+    r = sr.Recognizer()
+    with sr.AudioFile(audio_file) as source:
+        audio = r.record(source)
+    try:
+        text = r.recognize_google(audio)
+    except sr.UnknownValueError:
+        text = "Sorry, I could not understand the audio."
+    except sr.RequestError:
+        text = "Sorry, there was an issue with the speech recognition service."
+    return text
 
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
@@ -177,27 +192,33 @@ for message in st.session_state["messages"]:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Get user input
-user_input = st.chat_input("You: ")
+# Get user input as text or audio
+user_input_text = ""
+user_input_audio = st.file_uploader("Upload your audio message", type=["wav", "mp3"])
 
-if user_input:
+if user_input_audio:
+    with st.spinner("Processing audio..."):
+        user_input_text = audio_to_text(user_input_audio)
+        st.markdown(f"**You (transcribed):** {user_input_text}")
+
+if user_input_text:
     # Add user message to chat history
-    st.session_state["messages"].append({"role": "user", "content": user_input})
+    st.session_state["messages"].append({"role": "user", "content": user_input_text})
     
     # Display user message
     with st.chat_message("user"):
-        st.markdown(user_input)
+        st.markdown(user_input_text)
     
     # Generate and display bot response
     with st.spinner("Thinking..."):
         # Compile the chat history
         chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state["messages"]])
         
-        bot_response = retrieve_and_format_response(user_input, retriever, llm, chat_history).content
+        bot_response = retrieve_and_format_response(user_input_text, retriever, llm, chat_history).content
         
     st.session_state["messages"].append({"role": "assistant", "content": bot_response})
     
     with st.chat_message("assistant"):
         st.markdown(bot_response)
-        audio_url = text_to_audio(bot_response, "response.mp3")
+        audio_url = text_to_audio(bot_response)
         st.audio(audio_url, format="audio/mp3")
