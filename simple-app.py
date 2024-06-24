@@ -99,7 +99,10 @@ def text_to_audio(text):
 # Function to convert audio to text
 def audio_to_text(audio_file):
     r = sr.Recognizer()
-    with sr.AudioFile(audio_file) as source:
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(audio_file.read())
+        temp_file_path = temp_file.name
+    with sr.AudioFile(temp_file_path) as source:
         audio = r.record(source)
     try:
         text = r.recognize_google(audio)
