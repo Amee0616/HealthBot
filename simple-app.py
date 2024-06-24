@@ -193,8 +193,13 @@ for message in st.session_state["messages"]:
         st.markdown(message["content"])
 
 # Get user input as text or audio
-user_input_text = ""
-user_input_audio = st.file_uploader("Upload your audio message", type=["wav", "mp3"])
+tab1, tab2 = st.tabs(["Text Input", "Audio Input"])
+
+with tab1:
+    user_input_text = st.chat_input("You: ")
+
+with tab2:
+    user_input_audio = st.file_uploader("Upload your audio message", type=["wav", "mp3"])
 
 if user_input_audio:
     with st.spinner("Processing audio..."):
