@@ -11,3 +11,4 @@ pydub
 gtts 
 streamlit_webrtc
 soundfile
+speech_recognition
