@@ -23,6 +23,7 @@ from gtts import gTTS
 import base64
 import speech_recognition as sr
 import tempfile
+from pydub import AudioSegment
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
@@ -99,10 +100,14 @@ def text_to_audio(text):
 # Function to convert audio to text
 def audio_to_text(audio_file):
     r = sr.Recognizer()
-    with sr.AudioFile(audio_file) as source:
-        audio = r.record(source)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
+        audio = AudioSegment.from_file(audio_file)
+        audio.export(temp_file.name, format="wav")
+        temp_file_path = temp_file.name
+    with sr.AudioFile(temp_file_path) as source:
+        audio_data = r.record(source)
     try:
-        text = r.recognize_google(audio)
+        text = r.recognize_google(audio_data)
     except sr.UnknownValueError:
         text = "Sorry, I could not understand the audio."
     except sr.RequestError:
@@ -216,14 +221,14 @@ if user_input_text:
     
     # Generate and display bot response
     with st.spinner("Thinking..."):
-        # Compile the chat history
-        chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state["messages"]])
+        chat_history_text = get_chat_history_text(st.session_state["messages"])
+        response = retrieve_and_format_response(user_input_text, retriever, llm, chat_history_text)
+        bot_response_text = response["choices"][0]["message"]["content"]
+        st.session_state["messages"].append({"role": "assistant", "content": bot_response_text})
         
-        bot_response = retrieve_and_format_response(user_input_text, retriever, llm, chat_history).content
+        with st.chat_message("assistant"):
+            st.markdown(bot_response_text)
         
-    st.session_state["messages"].append({"role": "assistant", "content": bot_response})
-    
-    with st.chat_message("assistant"):
-        st.markdown(bot_response)
-        audio_url = text_to_audio(bot_response)
-        st.audio(audio_url, format="audio/mp3")
+        # Convert bot response to audio and display audio player
+        bot_response_audio = text_to_audio(bot_response_text)
+        st.audio(bot_response_audio, format="audio/mp3")
