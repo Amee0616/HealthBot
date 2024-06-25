@@ -197,22 +197,33 @@ for message in st.session_state["messages"]:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Get user input as text or audio
-tab1, tab2 = st.tabs(["Text Input", "Audio Input"])
-
-with tab1:
-    user_input_text = st.chat_input("You: ")
-
-with tab2:
-    user_input_audio = st.file_uploader("Upload your audio message", type=["wav", "mp3"])
+# Get user input
+user_input_audio = st.file_uploader("Upload your audio", type=["wav", "mp3", "ogg"])
+user_input_text = st.chat_input("You: ")
 
 if user_input_audio:
-    with st.spinner("Processing audio..."):
-        user_input_text = audio_to_text(user_input_audio)
-        st.markdown(f"**You (transcribed):** {user_input_text}")
+    user_input_text = audio_to_text(user_input_audio)
+    st.session_state["messages"].append({"role": "user", "content": user_input_text})
+    
+    # Display user message
+    with st.chat_message("user"):
+        st.markdown(user_input_text)
+    
+    # Generate and display bot response
+    with st.spinner("Thinking..."):
+        chat_history_text = get_chat_history_text(st.session_state["messages"])
+        response = retrieve_and_format_response(user_input_text, retriever, llm, chat_history_text)
+        bot_response_text = response["choices"][0]["message"]["content"]
+        st.session_state["messages"].append({"role": "assistant", "content": bot_response_text})
+        
+        with st.chat_message("assistant"):
+            st.markdown(bot_response_text)
+        
+        # Convert bot response to audio and display audio player
+        bot_response_audio = text_to_audio(bot_response_text)
+        st.audio(bot_response_audio, format="audio/mp3")
 
 if user_input_text:
-    # Add user message to chat history
     st.session_state["messages"].append({"role": "user", "content": user_input_text})
     
     # Display user message
