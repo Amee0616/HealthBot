@@ -23,6 +23,7 @@ from gtts import gTTS
 import base64
 import speech_recognition as sr
 import tempfile
+from pydub import AudioSegment
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
