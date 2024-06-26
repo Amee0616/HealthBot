@@ -98,8 +98,13 @@ def text_to_audio(text):
 
 # Function to convert audio to text
 def audio_to_text(audio_file):
+    # Convert the audio file to PCM format if it's not already
+    sound = AudioSegment.from_file(audio_file)
+    pcm_wav = "converted.wav"
+    sound.export(pcm_wav, format="wav")
+    
     r = sr.Recognizer()
-    with sr.AudioFile(audio_file) as source:
+    with sr.AudioFile(pcm_wav) as source:
         audio = r.record(source)
     try:
         text = r.recognize_google(audio)
