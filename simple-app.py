@@ -99,15 +99,37 @@ def text_to_audio(text):
 # Function to convert audio to text
 def audio_to_text(audio_file):
     r = sr.Recognizer()
-    with sr.AudioFile(audio_file) as source:
-        audio = r.record(source)
+    with tempfile.NamedTemporaryFile(delete=False) as temp_audio_file:
+        temp_audio_file.write(audio_file.read())
+        temp_audio_file_path = temp_audio_file.name
+
     try:
+        with sr.AudioFile(temp_audio_file_path) as source:
+            audio = r.record(source)
         text = r.recognize_google(audio)
     except sr.UnknownValueError:
         text = "Sorry, I could not understand the audio."
-    except sr.RequestError:
-        text = "Sorry, there was an issue with the speech recognition service."
+    except sr.RequestError as e:
+        text = f"Sorry, there was an issue with the speech recognition service: {e}"
+    except Exception as e:
+        text = f"An unexpected error occurred: {e}"
+    finally:
+        os.remove(temp_audio_file_path)
+        
     return text
+
+# Streamlit UI for audio upload and conversion
+st.title("Audio to Text Converter")
+
+uploaded_audio = st.file_uploader("Upload your audio message", type=["wav", "mp3"])
+
+if uploaded_audio:
+    with st.spinner("Processing audio..."):
+        try:
+            text_output = audio_to_text(uploaded_audio)
+            st.markdown(f"**Transcribed Text:** {text_output}")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
 
 # Setup - Streamlit secrets
 OPENAI_API_KEY = st.secrets["api_keys"]["OPENAI_API_KEY"]
